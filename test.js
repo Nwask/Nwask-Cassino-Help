@@ -1,175 +1,94 @@
 // ==UserScript==
 // @name         Nwask Cassino Helper
 // @version      3.1.1
-// @description  Interface de análise simulada (FINS EDUCATIVOS)
+// @description  ANÁLISE SIMULADA (FINS EDUCATIVOS)
 // @author       SeuNome
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
-(function() {
-    'use strict';
-
-    // Configurações iniciais
-    const version = "V3.1.1";
+(() => {
+    // Configurações básicas
+    const VERSION = "V3.1.1";
     let isActive = true;
-    let history = [];
-    const symbols = ["🐯", "🌟", "🍒", "💎", "🔔", "7️⃣"];
+    const symbols = ["🐯", "🌟", "🍒", "💎"];
+    
+    // Detecção de dispositivo
+    const device = {
+        mobile: /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),
+        touch: 'ontouchstart' in window
+    };
 
-    // Criar elemento de UI principal
-    const panel = document.createElement('div');
-    panel.id = 'nwask-panel';
-    panel.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 9999;
-        background: #1a1a1a;
-        color: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        min-width: 300px;
-        font-family: Arial, sans-serif;
-        user-select: none;
-        cursor: move;
-    `;
+    // Funções essenciais
+    const showToast = (text, duration = 3000) => {
+        const toast = document.createElement('div');
+        toast.style = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 20px;border-radius:5px;z-index:9999;`;
+        toast.textContent = text;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), duration);
+    };
 
-    // Cabeçalho do painel
-    const header = document.createElement('div');
-    header.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin: 0; color: #4CAF50;">Nwask Helper</h2>
-            <button id="nwask-close" style="background: none; border: none; color: white; cursor: pointer;">✖</button>
-        </div>
-    `;
-    panel.appendChild(header);
-
-    // Corpo do painel
-    const body = document.createElement('div');
-    body.innerHTML = `
-        <div id="stats" style="margin-bottom: 20px;">
-            <div style="background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                <div style="font-size: 0.9em; color: #888;">Último Padrão</div>
-                <div id="last-pattern" style="font-size: 24px; margin: 5px 0;">---</div>
+    // Interface principal
+    const createUI = () => {
+        const panel = document.createElement('div');
+        panel.innerHTML = `
+            <style>
+                .nwask-panel {
+                    position: fixed;
+                    top: ${device.mobile ? '10px' : '50%'};
+                    left: 50%;
+                    transform: ${device.mobile ? 'translateX(-50%)' : 'translate(-50%, -50%)'};
+                    background: #1a1a1a;
+                    color: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    z-index: 9999;
+                    min-width: 250px;
+                    font-family: Arial;
+                }
+                .nwask-btn {
+                    background: #4CAF50;
+                    border: none;
+                    color: white;
+                    padding: 10px;
+                    margin: 5px;
+                    border-radius: 5px;
+                    width: 100%;
+                    cursor: pointer;
+                }
+            </style>
+            <div class="nwask-panel">
+                <h3 style="margin:0 0 10px 0;">NWASK HELPER ${VERSION}</h3>
+                <div id="result" style="font-size:24px;text-align:center;">---</div>
+                <button class="nwask-btn" id="analyze">🔍 Analisar</button>
+                <button class="nwask-btn" id="close">❌ Fechar</button>
+                <div style="color:#ff4444;font-size:10px;margin-top:10px;text-align:center;">
+                    FINS EDUCATIVOS - NÃO USE EM JOGOS REAIS
+                </div>
             </div>
+        `;
+
+        // Controles interativos
+        panel.querySelector('#analyze').addEventListener('click', () => {
+            const randomPattern = Array.from({length: 3}, () => 
+                symbols[Math.floor(Math.random() * symbols.length)]
+            ).join('');
             
-            <div style="background: #2a2a2a; padding: 10px; border-radius: 8px;">
-                <div style="font-size: 0.9em; color: #888;">Próxima Jogada</div>
-                <div id="prediction" style="font-size: 32px; color: #4CAF50; font-weight: bold;">?</div>
-            </div>
-        </div>
+            panel.querySelector('#result').textContent = randomPattern;
+            showToast(`Padrão detectado: ${randomPattern}`);
+        });
 
-        <div style="display: grid; gap: 10px;">
-            <button id="analyze-btn" class="nwask-btn">🔍 Analisar Jogo</button>
-            <button id="reset-btn" class="nwask-btn danger">🔄 Reiniciar</button>
-        </div>
+        panel.querySelector('#close').addEventListener('click', () => {
+            panel.remove();
+            isActive = false;
+        });
 
-        <div style="font-size: 0.8em; color: #ff4444; margin-top: 15px; text-align: center;">
-            ❗ Simulação educacional - Não use em cassinos reais!
-        </div>
-    `;
-    panel.appendChild(body);
+        document.body.appendChild(panel);
+    };
 
-    // Estilos adicionais
-    const style = document.createElement('style');
-    style.textContent = `
-        .nwask-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-        }
-
-        .nwask-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .nwask-btn.danger {
-            background: #ff4444;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Adicionar ao corpo do documento
-    document.body.appendChild(panel);
-
-    // Controles de arrastar
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
-
-    panel.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', stopDrag);
-
-    function startDrag(e) {
-        if (e.target.closest('button')) return;
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialX = panel.offsetLeft;
-        initialY = panel.offsetTop;
-        panel.style.transition = 'none';
+    // Inicialização segura
+    if (!document.querySelector('.nwask-panel')) {
+        createUI();
+        showToast('NWASK Helper carregado!');
     }
-
-    function drag(e) {
-        if (!isDragging) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        panel.style.left = `${initialX + dx}px`;
-        panel.style.top = `${initialY + dy}px`;
-    }
-
-    function stopDrag() {
-        isDragging = false;
-        panel.style.transition = 'transform 0.2s';
-    }
-
-    // Funções principais
-    document.getElementById('analyze-btn').addEventListener('click', () => {
-        if (!isActive) return;
-
-        const newPattern = Array.from({length: 3}, () => 
-            symbols[Math.floor(Math.random() * symbols.length)]
-        );
-
-        history.push(newPattern);
-        if (history.length > 5) history.shift();
-
-        document.getElementById('last-pattern').textContent = newPattern.join('');
-        document.getElementById('prediction').textContent = 
-            Math.random() < 0.4 ? "🎯 JOGAR!" : "⛔ AGUARDAR";
-
-        // Animação
-        document.getElementById('prediction').style.animation = 'pulse 0.5s';
-        setTimeout(() => {
-            document.getElementById('prediction').style.animation = '';
-        }, 500);
-    });
-
-    document.getElementById('reset-btn').addEventListener('click', () => {
-        history = [];
-        document.getElementById('last-pattern').textContent = '---';
-        document.getElementById('prediction').textContent = '?';
-    });
-
-    document.getElementById('nwask-close').addEventListener('click', () => {
-        panel.style.display = 'none';
-        isActive = false;
-    });
-
-    // Inicialização
-    console.log(`Nwask Helper ${version} carregado!`);
 })();
