@@ -7,35 +7,36 @@
 // @grant        none
 // ==/UserScript==
 
-(()=>{
-    // Evitar injeção dupla
-    if(window.nwaskInjected) return;
-    window.nwaskInjected=true;
+(() => {
+    if (window.nwaskInjected) return;
+    window.nwaskInjected = true;
+
+    const symbols = ["🐯", "🌟", "🍒", "💎"];
     
-    // Criar UI minimalista
-    const panel=document.createElement('div');
-    panel.innerHTML=`
+    // Criar UI
+    const panel = document.createElement('div');
+    panel.innerHTML = `
         <style>
             .nwask-panel {
-                position:fixed;
-                top:20px;
-                right:20px;
-                background:#1a1a1a;
-                color:white;
-                padding:15px;
-                border-radius:10px;
-                z-index:9999;
-                font-family:Arial;
-                box-shadow:0 0 10px rgba(0,0,0,0.5);
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #1a1a1a;
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                z-index: 9999;
+                font-family: Arial;
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
             }
             .nwask-btn {
-                background:#4CAF50;
-                border:none;
-                color:white;
-                padding:8px 12px;
-                margin:5px;
-                border-radius:5px;
-                cursor:pointer;
+                background: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 12px;
+                margin: 5px;
+                border-radius: 5px;
+                cursor: pointer;
             }
         </style>
         <div class="nwask-panel">
@@ -46,12 +47,18 @@
         </div>
     `;
 
-    // Lógica interativa
-    panel.querySelector('#nwask-analyze').addEventListener('click',()=>{
-        const symbols=["🐯","🌟","🍒","💎"];
-        panel.querySelector('#result').textContent=`Resultado: ${symbols[Math.floor(Math.random()*4)]}${symbols[Math.floor(Math.random()*4)]}${symbols[Math.floor(Math.random()*4]}`;
+    // Event Listeners
+    panel.querySelector('#nwask-analyze').addEventListener('click', () => {
+        const result = symbols[Math.floor(Math.random() * 4)] + 
+                      symbols[Math.floor(Math.random() * 4)] + 
+                      symbols[Math.floor(Math.random() * 4)];
+        panel.querySelector('#result').textContent = `Resultado: ${result}`;
     });
 
-    panel.querySelector('#nwask-close').addEventListener('click',()=>panel.remove());
+    panel.querySelector('#nwask-close').addEventListener('click', () => {
+        panel.remove();
+        window.nwaskInjected = false;
+    });
+
     document.body.appendChild(panel);
 })();
